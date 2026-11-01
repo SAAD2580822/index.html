@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Reason for the Seasons - Interactive Learning Experience</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js for 3D Earth Orbit Simulation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0B0F19; color: #E2E8F0; }
+        .glow-sun { box-shadow: 0 0 50px rgba(251, 191, 36, 0.6); }
+        .glass-panel { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        canvas { touch-action: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden selection:bg-amber-500 selection:text-black">
+
+    <!-- Header Navigation -->
+    <header class="sticky top-0 z-50 glass-panel border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-red-500 flex items-center justify-center font-bold text-slate-950 text-xl shadow-lg shadow-amber-500/20">
+                <i class="fa-solid fa-sun"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-xl tracking-wide bg-gradient-to-r from-amber-400 via-orange-300 to-indigo-400 bg-clip-text text-transparent">THE REASON FOR SEASONS</h1>
+                <p class="text-xs text-slate-400">It's the Tilt, Not the Distance!</p>
+            </div>
+        </div>
+        <nav class="mt-4 sm:mt-0 flex flex-wrap gap-2 text-sm font-medium">
+            <button onclick="scrollToSection('3d-sim')" class="px-4 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-500/20 hover:text-amber-400 border border-slate-700 transition">3D Orbit Sim</button>
+            <button onclick="scrollToSection('flashlight-lab')" class="px-4 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-500/20 hover:text-amber-400 border border-slate-700 transition">Light Ray Lab</button>
+            <button onclick="scrollToSection('misconceptions')" class="px-4 py-2 rounded-lg bg-slate-800/80 hover:bg-amber-500/20 hover:text-amber-400 border border-slate-700 transition">Debunking Myths</button>
+            <button onclick="scrollToSection('quiz-section')" class="px-4 py-2 rounded-lg bg-amber-500 text-slate-950 font-bold hover:bg-amber-400 transition">Interactive Quiz</button>
+        </nav>
+    </header>
+
+    <!-- Hero / Main Interactive Section -->
+    <main class="flex-grow container mx-auto px-4 py-8 space-y-12">
+        
+        <!-- SECTION 1: 3D EARTH ORBIT SIMULATOR -->
+        <section id="3d-sim" class="glass-panel rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+            <div class="flex flex-col lg:flex-row gap-6">
+                <!-- 3D Canvas Area -->
+                <div class="lg:w-2/3 relative h-[480px] rounded-2xl overflow-hidden border border-slate-700/60 bg-black">
+                    <div id="canvas-container" class="w-full h-full cursor-grab active:cursor-grabbing"></div>
+                    
+                    <!-- Overlay Badge -->
+                    <div class="absolute top-4 left-4 glass-panel px-4 py-2 rounded-xl border border-slate-700 flex items-center space-x-3 pointer-events-none">
+                        <span id="current-month-badge" class="font-bold text-amber-400 text-lg">June 21 (Summer Solstice)</span>
+                    </div>
+
+                    <!-- Orbit Controls Instructions -->
+                    <div class="absolute bottom-4 left-4 glass-panel px-3 py-1.5 rounded-lg border border-slate-800 text-xs text-slate-400 flex items-center gap-2 pointer-events-none">
+                        <i class="fa-solid fa-arrows-spin text-amber-400"></i> Drag mouse/finger to orbit view
+                    </div>
+
+                    <!-- Sun Ray Lines Legend -->
+                    <div class="absolute top-4 right-4 glass-panel px-3 py-2 rounded-xl text-xs space-y-1 border border-slate-700 pointer-events-none">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-0.5 bg-yellow-400 inline-block"></span>
+                            <span>Direct Sun Rays</span>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="w-3 h-0.5 bg-sky-400 inline-block"></span>
+                            <span>Earth Axial Tilt (23.5°)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Simulation Controls & Live Data Panel -->
+                <div class="lg:w-1/3 flex flex-col justify-between space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                            <i class="fa-solid fa-globe text-amber-400"></i> Orbit & Tilt Simulator
+                        </h2>
+                        <p class="text-sm text-slate-400 leading-relaxed">
+                            Watch how Earth's axis stays pointed in the exact same direction (<span class="text-indigo-300 font-semibold">towards Polaris</span>) as it orbits the Sun, giving us 4 predictable seasons!
+                        </p>
+                    </div>
+
+                    <!-- Presets / Milestones -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold tracking-wider text-slate-400 uppercase">Jump to Solstices & Equinoxes:</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="setOrbitPosition(0)" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-amber-500/20 hover:border-amber-500/50 border border-slate-700 text-xs font-semibold text-left transition flex justify-between items-center">
+                                <span>June Solstice</span>
+                                <i class="fa-solid fa-sun text-amber-400"></i>
+                            </button>
+                            <button onclick="setOrbitPosition(Math.PI * 0.5)" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-amber-500/20 hover:border-amber-500/50 border border-slate-700 text-xs font-semibold text-left transition flex justify-between items-center">
+                                <span>Sept Equinox</span>
+                                <i class="fa-solid fa-leaf text-orange-400"></i>
+                            </button>
+                            <button onclick="setOrbitPosition(Math.PI)" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-amber-500/20 hover:border-amber-500/50 border border-slate-700 text-xs font-semibold text-left transition flex justify-between items-center">
+                                <span>Dec Solstice</span>
+                                <i class="fa-solid fa-snowflake text-sky-400"></i>
+                            </button>
+                            <button onclick="setOrbitPosition(Math.PI * 1.5)" class="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-amber-500/20 hover:border-amber-500/50 border border-slate-700 text-xs font-semibold text-left transition flex justify-between items-center">
+                                <span>March Equinox</span>
+                                <i class="fa-solid fa-seedling text-emerald-400"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Slider -->
+                    <div class="space-y-3 bg-slate-900/60 p-4 rounded-2xl border border-slate-800">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-semibold text-slate-300">Orbit Position (Year Progress)</span>
+                            <button id="play-pause-btn" onclick="togglePlay()" class="px-3 py-1 bg-amber-500 text-slate-950 font-bold text-xs rounded-lg hover:bg-amber-400">Pause</button>
+                        </div>
+                        <input id="orbit-slider" type="range" min="0" max="6.283" step="0.01" value="0" class="w-full accent-amber-500 cursor-pointer">
+                        
+                        <!-- Dynamic Axial Tilt Toggle -->
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                            <span class="text-xs text-slate-300">Enable Axial Tilt (23.5°)</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="tilt-toggle" checked onchange="toggleTilt(this.checked)" class="sr-only peer">
+                                <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Hemisphere Status -->
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <div class="text-xs text-slate-400 uppercase font-bold mb-1">Northern Hemisphere</div>
+                            <div id="nh-status" class="text-sm font-bold text-amber-400">Summer</div>
+                            <div id="nh-rays" class="text-[10px] text-slate-400 mt-0.5">Direct Rays (Warm)</div>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 rounded-xl border border-slate-800">
+                            <div class="text-xs text-slate-400 uppercase font-bold mb-1">Southern Hemisphere</div>
+                            <div id="sh-status" class="text-sm font-bold text-sky-400">Winter</div>
+                            <div id="sh-rays" class="text-[10px] text-slate-400 mt-0.5">Indirect Rays (Cool)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: FLASHLIGHT LIGHT RAY LAB -->
+        <section id="flashlight-lab" class="glass-panel rounded-3xl p-6 sm:p-8 relative">
+            <div class="max-w-3xl mb-6">
+                <div class="inline-block px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 text-xs font-bold rounded-full mb-3 uppercase tracking-wider">Try it at Home!</div>
+                <h2 class="text-3xl font-extrabold text-white">Direct vs. Indirect Energy Experiment</h2>
+                <p class="text-slate-400 mt-2 leading-relaxed">
+                    Why does tilt change the temperature? Imagine a flashlight shining on a desk. When held straight down, the beam is concentrated. When tilted, the same amount of energy spreads out over a larger area!
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                <!-- Interactive Canvas for Flashlight -->
+                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center relative flex flex-col items-center">
+                    <canvas id="flashlight-canvas" width="400" height="260" class="w-full h-auto max-w-sm rounded-xl"></canvas>
+                    <div class="mt-4 flex items-center space-x-4 w-full max-w-xs">
+                        <span class="text-xs text-slate-400 font-medium">Tilt Angle:</span>
+                        <input id="flashlight-angle" type="range" min="0" max="60" value="0" class="w-full accent-amber-500" oninput="updateFlashlightSim(this.value)">
+                        <span id="angle-display" class="text-xs font-bold text-amber-400 min-w-[35px]">0°</span>
+                    </div>
+                </div>
+
+                <!-- Live Metrics & Explanation -->
+                <div class="space-y-4">
+                    <div class="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400">Energy Spread Area:</span>
+                            <span id="stat-area" class="font-bold text-white">Small (Concentrated)</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-area" class="bg-amber-400 h-full w-[25%] transition-all duration-300"></div>
+                        </div>
+
+                        <div class="flex justify-between items-center text-sm pt-2">
+                            <span class="text-slate-400">Heat / Temperature Impact:</span>
+                            <span id="stat-temp" class="font-bold text-red-400">High Energy (Hotter)</span>
+                        </div>
+                        <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                            <div id="bar-temp" class="bg-red-500 h-full w-[90%] transition-all duration-300"></div>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-900/50 text-sm leading-relaxed text-indigo-200">
+                        <strong class="text-indigo-400 block mb-1"><i class="fa-solid fa-lightbulb mr-1"></i> Key Takeaway:</strong>
+                        Summer isn't warm because we are physically closer to the Sun; it is warm because the Sun's rays strike us <strong>directly overhead</strong>, concentrating solar heat into a smaller surface area!
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: DEBUNKING THE COMMON MISCONCEPTION -->
+        <section id="misconceptions" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="glass-panel p-6 rounded-3xl border border-red-500/20 relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 text-red-500/10 text-9xl font-black">MYTH</div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-xmark"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">The Popular Myth</h3>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    "Summer happens because Earth gets physically closer to the Sun during its elliptical orbit, and Winter happens because we pull far away."
+                </p>
+                <div class="mt-4 p-3 bg-red-500/10 rounded-xl border border-red-500/20 text-xs text-red-300">
+                    ❌ <strong>False!</strong> Earth's orbit is almost a perfect circle. The slight distance variation is far too small to cause giant weather shifts.
+                </div>
+            </div>
+
+            <div class="glass-panel p-6 rounded-3xl border border-emerald-500/20 relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 text-emerald-500/10 text-9xl font-black">FACT</div>
+                <div class="flex items-center space-x-3 mb-4">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fa-solid fa-check"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">The Scientific Fact</h3>
+                </div>
+                <p class="text-slate-300 text-sm leading-relaxed">
+                    Earth is actually <strong>closest to the Sun in early January (Perihelion)</strong>—right in the middle of Winter for the Northern Hemisphere!
+                </p>
+                <div class="mt-4 p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20 text-xs text-emerald-300">
+                    ✔️ <strong>Proof:</strong> If distance caused seasons, the whole world would experience Summer at the exact same time. Instead, North and South hemispheres always have opposite seasons!
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: INTERACTIVE QUIZ & KNOWLEDGE CHECK -->
+        <section id="quiz-section" class="glass-panel rounded-3xl p-6 sm:p-8">
+            <div class="text-center max-w-xl mx-auto mb-8">
+                <h2 class="text-3xl font-extrabold text-white">Test Your Season Smartness!</h2>
+                <p class="text-slate-400 text-sm mt-2">Check what you've learned from the slides and simulations.</p>
+            </div>
+
+            <div class="max-w-2xl mx-auto bg-slate-900/90 rounded-2xl p-6 border border-slate-800" id="quiz-card">
+                <div class="flex justify-between items-center text-xs text-slate-400 font-bold mb-4 uppercase tracking-wider">
+                    <span id="quiz-progress">Question 1 of 4</span>
+                    <span id="quiz-score" class="text-amber-400">Score: 0</span>
+                </div>
+
+                <h3 id="quiz-question" class="text-lg font-bold text-white mb-6">What is the primary cause of Earth's four seasons?</h3>
+
+                <div id="quiz-options" class="space-y-3">
+                    <!-- Dynamic Buttons Generated via JS -->
+                </div>
+
+                <!-- Explanation banner -->
+                <div id="quiz-feedback" class="mt-6 p-4 rounded-xl text-sm hidden"></div>
+
+                <div class="mt-6 flex justify-end">
+                    <button id="next-btn" onclick="nextQuestion()" class="px-5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm rounded-xl transition hidden">Next Question <i class="fa-solid fa-arrow-right ml-1"></i></button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-800 text-center text-xs text-slate-500 py-6">
+        <p>Interactive STEM Learning Module • Adapted from "How Seasons are Formed" Presentation</p>
+    </footer>
+
+    <!-- Three.js Orbit Logic & Interactivity -->
+    <script>
+        // --- 1. THREE.JS 3D SCENE SETUP ---
+        let scene, camera, renderer, earthGroup, earthMesh, sunMesh, tiltContainer, rayLines;
+        let isPlaying = true;
+        let orbitAngle = 0;
+        let hasTilt = true;
+
+        const container = document.getElementById('canvas-container');
+
+        function init3D() {
+            scene = new THREE.Scene();
+            
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.set(0, 18, 28);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Ambient Light & Sun Point Light
+            const ambientLight = new THREE.AmbientLight(0x333333);
+            scene.add(ambientLight);
+
+            const sunLight = new THREE.PointLight(0xffffff, 2.5, 100);
+            sunLight.position.set(0, 0, 0);
+            scene.add(sunLight);
+
+            // Sun Sphere
+            const sunGeo = new THREE.SphereGeometry(3, 32, 32);
+            const sunMat = new THREE.MeshBasicMaterial({ color: 0xffaa00 });
+            sunMesh = new THREE.Mesh(sunGeo, sunMat);
+            scene.add(sunMesh);
+
+            // Sun Glow Effect (Sprite)
+            const glowGeo = new THREE.SphereGeometry(3.4, 32, 32);
+            const glowMat = new THREE.MeshBasicMaterial({ color: 0xff6600, transparent: true, opacity: 0.3 });
+            scene.add(new THREE.Mesh(glowGeo, glowMat));
+
+            // Orbit Path Visual Ring
+            const orbitGeo = new THREE.RingGeometry(11.95, 12.05, 64);
+            const orbitMat = new THREE.MeshBasicMaterial({ color: 0x475569, side: THREE.DoubleSide });
+            const orbitRing = new THREE.Mesh(orbitGeo, orbitMat);
+            orbitRing.rotation.x = Math.PI / 2;
+            scene.add(orbitRing);
+
+            // Earth Parent Holder (For Orbiting)
+            earthGroup = new THREE.Group();
+            scene.add(earthGroup);
+
+            // Earth Tilt Holder (For 23.5° Constant Tilt)
+            tiltContainer = new THREE.Group();
+            tiltContainer.rotation.z = THREE.MathUtils.degToRad(23.5); // Fixed 23.5 deg tilt
+            earthGroup.add(tiltContainer);
+
+            // Earth Globe
+            const earthGeo = new THREE.SphereGeometry(1.4, 32, 32);
+            // Procedural Earth Material
+            const earthMat = new THREE.MeshPhongMaterial({
+                color: 0x1d4ed8,
+                emissive: 0x051d40,
+                specular: 0x111111,
+                shininess: 10,
+                wireframe: false
+            });
+            earthMesh = new THREE.Mesh(earthGeo, earthMat);
+            tiltContainer.add(earthMesh);
+
+            // Add Continents Visual (Low-poly styling)
+            const landGeo = new THREE.SphereGeometry(1.41, 16, 16);
+            const landMat = new THREE.MeshBasicMaterial({ color: 0x15803d, wireframe: true, transparent: true, opacity: 0.4 });
+            const landMesh = new THREE.Mesh(landGeo, landMat);
+            tiltContainer.add(landMesh);
+
+            // Axis Line (Polaris Pointer)
+            const axisGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, -2.5, 0),
+                new THREE.Vector3(0, 2.5, 0)
+            ]);
+            const axisMat = new THREE.LineBasicMaterial({ color: 0x38bdf8 });
+            const axisLine = new THREE.Line(axisGeo, axisMat);
+            tiltContainer.add(axisLine);
+
+            // Sunlight Ray Line Indicator
+            const rayGeo = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(0, 0, 0),
+                new THREE.Vector3(-10, 0, 0)
+            ]);
+            const rayMat = new THREE.LineDashedMaterial({ color: 0xfacc15, dashSize: 0.4, gapSize: 0.2 });
+            rayLines = new THREE.Line(rayGeo, rayMat);
+            rayLines.computeLineDistances();
+            scene.add(rayLines);
+
+            // Position initial Earth at orbit radius 12
+            updateEarthPosition();
+
+            // Simple Mouse Interaction for Rotation View
+            let isDragging = false;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+
+            renderer.domElement.addEventListener('pointerdown', (e) => {
+                isDragging = true;
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!isDragging) return;
+                const deltaX = e.clientX - prevMouseX;
+                const deltaY = e.clientY - prevMouseY;
+
+                scene.rotation.y += deltaX * 0.005;
+                scene.rotation.x += deltaY * 0.005;
+
+                prevMouseX = e.clientX;
+                prevMouseY = e.clientY;
+            });
+
+            window.addEventListener('pointerup', () => isDragging = false);
+
+            window.addEventListener('resize', onWindowResize);
+            animate();
+        }
+
+        function updateEarthPosition() {
+            const radius = 12;
+            earthGroup.position.x = radius * Math.cos(orbitAngle);
+            earthGroup.position.z = radius * Math.sin(orbitAngle);
+
+            // Connect Ray line from Sun (0,0,0) to Earth
+            const rayPos = rayLines.geometry.attributes.position;
+            rayPos.setXYZ(0, 0, 0, 0);
+            rayPos.setXYZ(1, earthGroup.position.x, 0, earthGroup.position.z);
+            rayLines.geometry.attributes.position.needsUpdate = true;
+
+            // Earth Daily Self-Rotation
+            earthMesh.rotation.y += 0.02;
+
+            // Sync Slider UI
+            document.getElementById('orbit-slider').value = orbitAngle;
+
+            // Dynamic Data Calculations
+            updateUIStatus();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isPlaying) {
+                orbitAngle += 0.005;
+                if (orbitAngle > Math.PI * 2) orbitAngle = 0;
+                updateEarthPosition();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        function togglePlay() {
+            isPlaying = !isPlaying;
+            document.getElementById('play-pause-btn').innerText = isPlaying ? 'Pause' : 'Play';
+        }
+
+        function setOrbitPosition(val) {
+            orbitAngle = parseFloat(val);
+            isPlaying = false;
+            document.getElementById('play-pause-btn').innerText = 'Play';
+            updateEarthPosition();
+        }
+
+        function toggleTilt(enabled) {
+            hasTilt = enabled;
+            tiltContainer.rotation.z = enabled ? THREE.MathUtils.degToRad(23.5) : 0;
+            updateUIStatus();
+        }
+
+        document.getElementById('orbit-slider').addEventListener('input', (e) => {
+            orbitAngle = parseFloat(e.target.value);
+            isPlaying = false;
+            document.getElementById('play-pause-btn').innerText = 'Play';
+            updateEarthPosition();
+        });
+
+        function updateUIStatus() {
+            const badge = document.getElementById('current-month-badge');
+            const nh = document.getElementById('nh-status');
+            const sh = document.getElementById('sh-status');
+            const nhRays = document.getElementById('nh-rays');
+            const shRays = document.getElementById('sh-rays');
+
+            if (!hasTilt) {
+                badge.innerText = "No Tilt = No Seasons Worldwide!";
+                nh.innerText = "Equable Climate";
+                sh.innerText = "Equable Climate";
+                nhRays.innerText = "Medium Sunlight";
+                shRays.innerText = "Medium Sunlight";
+                return;
+            }
+
+            // Normal Seasons based on Angle
+            // 0 = June Solstice, PI/2 = Sept, PI = Dec Solstice, 3PI/2 = March
+            const deg = (orbitAngle * 180 / Math.PI) % 360;
+
+            if (deg >= 330 || deg < 30) {
+                badge.innerText = "June 21 (Summer Solstice)";
+                nh.innerText = "Summer ☀️";
+                sh.innerText = "Winter ❄️";
+                nhRays.innerText = "Direct Sunlight (Hot)";
+                shRays.innerText = "Indirect Sunlight (Cold)";
+            } else if (deg >= 30 && deg < 120) {
+                badge.innerText = "September 23 (Autumnal Equinox)";
+                nh.innerText = "Autumn 🍂";
+                sh.innerText = "Spring 🌸";
+                nhRays.innerText = "Equal Rays (12h Day / 12h Night)";
+                shRays.innerText = "Equal Rays (12h Day / 12h Night)";
+            } else if (deg >= 120 && deg < 210) {
+                badge.innerText = "December 21 (Winter Solstice)";
+                nh.innerText = "Winter ❄️";
+                sh.innerText = "Summer ☀️";
+                nhRays.innerText = "Indirect Sunlight (Cold)";
+                shRays.innerText = "Direct Sunlight (Hot)";
+            } else {
+                badge.innerText = "March 21 (Vernal Equinox)";
+                nh.innerText = "Spring 🌸";
+                sh.innerText = "Autumn 🍂";
+                nhRays.innerText = "Equal Rays (12h Day / 12h Night)";
+                shRays.innerText = "Equal Rays (12h Day / 12h Night)";
+            }
+        }
+
+        // --- 2. FLASHLIGHT CANVAS EXPERIMENT ---
+        function updateFlashlightSim(angle) {
+            document.getElementById('angle-display').innerText = angle + '°';
+            const canvas = document.getElementById('flashlight-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const rad = angle * Math.PI / 180;
+
+            // Draw Ground Line
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(20, 220);
+            ctx.lineTo(380, 220);
+            ctx.stroke();
+
+            // Flashlight Position
+            const sourceX = 200 - Math.sin(rad) * 80;
+            const sourceY = 70;
+
+            // Calculate Beam footprint spread on ground
+            const spreadWidth = 60 / Math.cos(rad);
+            const groundCenterX = 200 + Math.tan(rad) * 100;
+
+            // Draw Light Beam Cone
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.35)';
+            ctx.beginPath();
+            ctx.moveTo(sourceX - 25 * Math.cos(rad), sourceY - 25 * Math.sin(rad));
+            ctx.lineTo(groundCenterX - spreadWidth / 2, 220);
+            ctx.lineTo(groundCenterX + spreadWidth / 2, 220);
+            ctx.lineTo(sourceX + 25 * Math.cos(rad), sourceY + 25 * Math.sin(rad));
+            ctx.closePath();
+            ctx.fill();
+
+            // Draw Light Oval on Ground
+            ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
+            ctx.beginPath();
+            ctx.ellipse(groundCenterX, 220, spreadWidth / 2, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Draw Flashlight Body
+            ctx.fillStyle = '#94a3b8';
+            ctx.save();
+            ctx.translate(sourceX, sourceY);
+            ctx.rotate(rad);
+            ctx.fillRect(-15, -40, 30, 40);
+            ctx.restore();
+
+            // Update stats
+            const spreadRatio = (spreadWidth / 60).toFixed(1);
+            const intensity = Math.round(100 / spreadRatio);
+
+            document.getElementById('stat-area').innerText = spreadRatio > 1.2 ? `Spread out (${spreadRatio}x area)` : `Concentrated (${spreadRatio}x area)`;
+            document.getElementById('bar-area').style.width = Math.min(100, (spreadRatio / 2) * 100) + '%';
+
+            document.getElementById('stat-temp').innerText = intensity < 65 ? `Indirect Rays (${intensity}% intensity)` : `Direct Rays (${intensity}% intensity)`;
+            document.getElementById('bar-temp').style.width = intensity + '%';
+        }
+
+        // --- 3. INTERACTIVE QUIZ LOGIC ---
+        const quizData = [
+            {
+                q: "What is the true primary cause of Earth's four seasons?",
+                options: [
+                    "Earth's changing distance from the Sun",
+                    "The 23.5° axial tilt of Earth as it revolves around the Sun",
+                    "Solar flares and sunspot activity changes",
+                    "The rotation speed of Earth on its axis"
+                ],
+                correct: 1,
+                exp: "Correct! Earth's 23.5° axial tilt causes different hemispheres to receive direct or indirect sunlight as Earth orbits the Sun."
+            },
+            {
+                q: "During the Summer Solstice in June, which hemisphere is tilted directly toward the Sun?",
+                options: [
+                    "Northern Hemisphere",
+                    "Southern Hemisphere",
+                    "Both hemispheres equally",
+                    "Neither hemisphere"
+                ],
+                correct: 0,
+                exp: "Correct! In June, the Northern Hemisphere tilts toward the Sun, giving it longer daylight hours and more direct solar energy."
+            },
+            {
+                q: "What occurs during an Equinox (March & September)?",
+                options: [
+                    "The Earth is closest to the Sun",
+                    "Day and night are equal in length (12 hours each) everywhere on Earth",
+                    "The Sun disappears at the equator",
+                    "The longest day of the year occurs"
+                ],
+                correct: 1,
+                exp: "Correct! 'Equinox' comes from Latin for 'equal night'. The Sun's rays strike the equator directly, providing equal day and night."
+            },
+            {
+                q: "When is Earth at Perihelion (closest distance to the Sun)?",
+                options: [
+                    "Around July 4th (Northern Summer)",
+                    "Around January 4th (Northern Winter)",
+                    "During the March Equinox",
+                    "Distance never changes"
+                ],
+                correct: 1,
+                exp: "Correct! Earth is actually closest to the Sun in January! This proves distance does NOT cause seasons."
+            }
+        ];
+
+        let currentQ = 0;
+        let score = 0;
+
+        function loadQuiz() {
+            const data = quizData[currentQ];
+            document.getElementById('quiz-progress').innerText = `Question ${currentQ + 1} of ${quizData.length}`;
+            document.getElementById('quiz-score').innerText = `Score: ${score}`;
+            document.getElementById('quiz-question').innerText = data.q;
+
+            const optionsContainer = document.getElementById('quiz-options');
+            optionsContainer.innerHTML = '';
+
+            data.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-4 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-medium transition flex justify-between items-center";
+                btn.innerHTML = `<span>${opt}</span><i class="fa-regular fa-circle text-slate-500"></i>`;
+                btn.onclick = () => selectOption(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('next-btn').classList.add('hidden');
+        }
+
+        function selectOption(idx, btnEl) {
+            const data = quizData[currentQ];
+            const options = document.getElementById('quiz-options').children;
+
+            // Disable all buttons
+            for (let b of options) {
+                b.disabled = true;
+                b.classList.add('opacity-60');
+            }
+
+            btnEl.classList.remove('opacity-60');
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden');
+
+            if (idx === data.correct) {
+                score += 10;
+                btnEl.classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                feedback.className = "mt-6 p-4 rounded-xl text-sm bg-emerald-500/20 border border-emerald-500/40 text-emerald-300";
+                feedback.innerHTML = `<strong>✨ Correct!</strong> ${data.exp}`;
+            } else {
+                btnEl.classList.add('bg-red-500/20', 'border-red-500', 'text-red-300');
+                options[data.correct].classList.remove('opacity-60');
+                options[data.correct].classList.add('bg-emerald-500/20', 'border-emerald-500', 'text-emerald-300');
+                feedback.className = "mt-6 p-4 rounded-xl text-sm bg-red-500/20 border border-red-500/40 text-red-300";
+                feedback.innerHTML = `<strong>❌ Not quite.</strong> ${data.exp}`;
+            }
+
+            document.getElementById('quiz-score').innerText = `Score: ${score}`;
+            document.getElementById('next-btn').classList.remove('hidden');
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < quizData.length) {
+                loadQuiz();
+            } else {
+                showQuizResults();
+            }
+        }
+
+        function showQuizResults() {
+            const card = document.getElementById('quiz-card');
+            card.innerHTML = `
+                <div class="text-center py-8 space-y-4">
+                    <div class="w-16 h-16 bg-amber-500/20 text-amber-400 rounded-full flex items-center justify-center mx-auto text-3xl font-black">
+                        🏆
+                    </div>
+                    <h3 class="text-2xl font-bold text-white">Quiz Completed!</h3>
+                    <p class="text-slate-300 text-sm">You scored <strong>${score} / ${quizData.length * 10}</strong> points.</p>
+                    <button onclick="resetQuiz()" class="px-6 py-2.5 bg-amber-500 text-slate-950 font-bold text-sm rounded-xl hover:bg-amber-400 transition">Try Again</button>
+                </div>
+            `;
+        }
+
+        function resetQuiz() {
+            currentQ = 0;
+            score = 0;
+            location.reload();
+        }
+
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- INIT ON LOAD ---
+        window.onload = function() {
+            init3D();
+            updateFlashlightSim(0);
+            loadQuiz();
+        };
+    </script>
+</body>
+</html>
